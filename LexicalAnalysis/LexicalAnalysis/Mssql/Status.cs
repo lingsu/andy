@@ -20,5 +20,6 @@ namespace LexicalAnalysis.Mssql
         FIELD_TYPE,
         FIELD_LEN,
         FIELD_COMMENT,
+        P_K
     }
 }

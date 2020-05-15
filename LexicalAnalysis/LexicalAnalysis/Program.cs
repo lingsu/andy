@@ -9,7 +9,7 @@ namespace LexicalAnalysis
         static void Main(string[] args)
         {
             //One();
-            Two();
+            //Two();
             Three();
         }
 
@@ -84,7 +84,16 @@ namespace LexicalAnalysis
 	[onu_sn] [nvarchar](250) NULL
 ) ON [PRIMARY]";
 
-            var tableInfo = new MssqlParser(sql2).GenerateDDLInfo();
+            var sql3 = @"CREATE TABLE [dbo].[AbpRoles](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[TenantId] [int] NULL,
+ CONSTRAINT [PK_AbpRoles] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]";
+
+            var tableInfo = new MssqlParser(sql).GenerateDDLInfo();
             //Console.WriteLine("base \ttoken \t value \t pid");
 
             //foreach (var result in tokenize)

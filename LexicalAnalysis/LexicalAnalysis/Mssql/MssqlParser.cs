@@ -75,12 +75,13 @@ namespace LexicalAnalysis.Mssql
                         }
                         break;
                     case TokenType.FI:
-                        if (value == ',' || value == '\n')
+                        if ((value == ',' && (new char[] { '\n', '\r' }).Contains((char)reader.Peek())) || value == '\n')
                         {
+                            //var ff = && reader.Peek() == '\n'
                             type = TokenType.INIT;
 
                             result.Pid = nextPid();
-                            //lastType = TokenType.FI;
+                            lastType = TokenType.FI;
                             Tokenize(result.Text.ToString(), Status.FI, result.Pid);
                         }
                         else
@@ -128,7 +129,6 @@ namespace LexicalAnalysis.Mssql
                         if (value == ',' || value == '\n')
                         {
                             type = TokenType.INIT;
-                            
                         }
                         else
                         {
@@ -139,10 +139,41 @@ namespace LexicalAnalysis.Mssql
                     case TokenType.FIELD_COMMENT:
                         break;
                     case TokenType.P_K:
+                        if (value == ')')
+                        {
+                            type = TokenType.INIT;
+
+                            result.Pid = nextPid();
+                            //lastType = TokenType.FI;
+                            Tokenize(result.Text.ToString(), Status.P_K, result.Pid);
+                        }
+                        else
+                        {
+                            result.Text.Append(value);
+                        }
                         break;
                     case TokenType.P_K_V:
+                        if (value == '(')
+                        {
+                            type = TokenType.INIT;
+                            result.Pid = pid;
+                        }
+                        else
+                        {
+                            result.Text.Append(value);
+                        }
                         break;
                     case TokenType.K:
+                        if (value == ']')
+                        {
+                            type = TokenType.INIT;
+                            result.Pid = pid;
+                        }
+                        else
+                        {
+                            result.Text.Append(value);
+                        }
+
                         break;
 
                     default:
@@ -166,9 +197,19 @@ namespace LexicalAnalysis.Mssql
                 result = new Result();
             }
 
-            if (value == 'C' && pStatus == Status.BASE_INIT)
+            if (value == 'C' && pStatus == Status.BASE_INIT  && lastType == TokenType.FI)
+            {
+                result.TokenType = TokenType.P_K;
+                result.Text.Append(value);
+            }
+            else if (value == 'C' && pStatus == Status.BASE_INIT)
             {
                 result.TokenType = TokenType.CT;
+                result.Text.Append(value);
+            }
+            else if (value == 'C' && pStatus == Status.P_K)
+            {
+                result.TokenType = TokenType.P_K_V;
                 result.Text.Append(value);
             }
             else if (value == '[' && pStatus == Status.DBO && lastType == TokenType.INIT)
@@ -183,6 +224,10 @@ namespace LexicalAnalysis.Mssql
             {
                 result.TokenType = TokenType.FI;
                 result.Text.Append(value);
+            }
+            else if (value == '[' && pStatus == Status.P_K)
+            {
+                result.TokenType = TokenType.K;
             }
             else if (value == '[' && pStatus == Status.FI && lastType == TokenType.INIT)
             {
@@ -211,22 +256,24 @@ namespace LexicalAnalysis.Mssql
         {
             var tableinfo = new TableInfo();
             var result = Tokenize(script, Mssql.Status.BASE_INIT, 0);
-            //Console.WriteLine("base \ttoken \t value \t pid");
+            Console.WriteLine("base \ttoken \t value \t pid");
 
-            //foreach (var tokenize in result)
-            //{
-            //    Console.WriteLine(tokenize.Status + "\t" + tokenize.TokenType + " \t " + tokenize.Text.ToString() + "\t" + tokenize.Pid);
-            //}
+            foreach (var tokenize in result)
+            {
+                Console.WriteLine(tokenize.Status + "\t" + tokenize.TokenType + " \t " + tokenize.Text.ToString() + "\t" + tokenize.Pid);
+            }
 
             tableinfo.TableName = result.First(x => x.TokenType == TokenType.TBN).NodeText;
             foreach (var item in result.GroupBy(x=>x.Pid))
             {
-                if (item.Any(x=>x.TokenType == TokenType.FI) && item.Any(x => x.TokenType == TokenType.FIELD_NAME))
+                if (item.Any(x=>x.TokenType == TokenType.FI) && item.Any(x => x.TokenType == TokenType.FIELD_NAME) && item.Any(x => x.TokenType == TokenType.FIELD_TYPE))
                 {
-                    tableinfo.AddCol(item.FirstOrDefault(x => x.TokenType == TokenType.FIELD_NAME)?.NodeText,
-                        item.FirstOrDefault(x => x.TokenType == TokenType.FIELD_TYPE)?.NodeText,
+                    var name = item.First(x => x.TokenType == TokenType.FIELD_NAME).NodeText;
+
+                    tableinfo.AddCol(name,
+                        item.First(x => x.TokenType == TokenType.FIELD_TYPE).NodeText,
                         item.FirstOrDefault(x => x.TokenType == TokenType.FIELD_NULL)?.NodeText == "NULL",
-                        false
+                        result.Any(x=>x.NodeText == name && x.TokenType == TokenType.K)
                         );
                 }
             }
