@@ -46,7 +46,7 @@ namespace LexicalAnalysis
 
         static void Three()
         {
-            var sql = @"CREATE TABLE [dbo].[AbpRoles](
+            var sql = @"CREATE TABLE [dbo].[test1](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
 	[ConcurrencyStamp] [nvarchar](128) NULL,
 	[CreationTime] [datetime2](7) NOT NULL,
@@ -68,7 +68,7 @@ namespace LexicalAnalysis
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]";
 
-            var sql2 = @"CREATE TABLE [dbo].[account_onu](
+            var sql2 = @"CREATE TABLE [dbo].[test2](
 	[update_time] [datetime] NOT NULL,
 	[account] [varchar](50) NULL,
 	[olt_ip] [varchar](15) NULL,
@@ -84,7 +84,7 @@ namespace LexicalAnalysis
 	[onu_sn] [nvarchar](250) NULL
 ) ON [PRIMARY]";
 
-            var sql3 = @"CREATE TABLE [dbo].[AbpRoles](
+            var sql3 = @"CREATE TABLE [dbo].[Test3](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
 	[TenantId] [int] NULL,
  CONSTRAINT [PK_AbpRoles] PRIMARY KEY CLUSTERED 
@@ -93,19 +93,25 @@ namespace LexicalAnalysis
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]";
 
-            var tableInfo = new MssqlParser(sql).GenerateDDLInfo();
-            //Console.WriteLine("base \ttoken \t value \t pid");
-
-            //foreach (var result in tokenize)
-            //{
-            //    Console.WriteLine(result.Status + "\t" + result.TokenType + " \t " + result.Text.ToString() + "\t" + result.Pid);
-            //}
-            //Console.WriteLine("base \ttoken \t value \t pid");
-            Console.WriteLine("TableName:" + tableInfo.TableName);
-            foreach (var result in tableInfo.Col)
+            foreach (var item in new[] { sql, sql2, sql3 })
             {
-                Console.WriteLine(result.Name + "\t" + result.Type + " \t " + result.IsNull + "\t" + result.IsK);
+
+                var tableInfo = new MssqlParser(item).GenerateDDLInfo();
+                //Console.WriteLine("base \ttoken \t value \t pid");
+
+                //foreach (var result in tokenize)
+                //{
+                //    Console.WriteLine(result.Status + "\t" + result.TokenType + " \t " + result.Text.ToString() + "\t" + result.Pid);
+                //}
+                //Console.WriteLine("base \ttoken \t value \t pid");
+                Console.WriteLine("TableName:" + tableInfo.TableName);
+                foreach (var result in tableInfo.Col)
+                {
+                    Console.WriteLine(result.Name + "\t" + result.Type + " \t " + result.IsNull + "\t" + result.IsK);
+                }
+
             }
+
 
         }
     }
